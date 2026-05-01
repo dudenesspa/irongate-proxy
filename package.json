@@ -1,0 +1,6 @@
+{
+  "name": "irongate-proxy",
+  "version": "1.0.0",
+  "description": "Server-side proxy for IronGate Live Practice Arena Anthropic API calls",
+  "private": true
+}
