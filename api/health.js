@@ -1,13 +1,24 @@
+// Vercel serverless function: IronGate health check
+// Pings Anthropic to verify the model is active.
+// Called by UptimeRobot to monitor chatbot availability.
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({
+      status: 'error',
+      error: 'ANTHROPIC_API_KEY not set.'
+    });
+  }
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
@@ -16,15 +27,13 @@ export default async function handler(req, res) {
       })
     });
 
-    if (response.ok) {
-      res.status(200).json({ status: 'ok', model: 'claude-sonnet-4-6' });
+    if (anthropicResponse.ok) {
+      return res.status(200).json({ status: 'ok', model: 'claude-sonnet-4-6' });
     } else {
-      const error = await response.json();
-      res.status(500).json({ status: 'model_error', detail: error });
+      const error = await anthropicResponse.json();
+      return res.status(500).json({ status: 'model_error', detail: error });
     }
   } catch (e) {
-    res.status(500).json({ status: 'failed', error: e.message });
+    return res.status(502).json({ status: 'failed', error: e.message });
   }
 }
-Step 5: Scroll down and click Commit changes. Leave the default commit message, commit directly to main.
-Vercel will automatically detect the new file and redeploy. Takes about 60 seconds. Tell me when that's done and I'll walk you through the UptimeRobot setup.
